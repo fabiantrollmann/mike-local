@@ -6,6 +6,7 @@ import {
     clearLegacyBrowserAuthStorage,
     enrollMfa,
     exchangeAuthCode,
+    getAuthProviders,
     getAuthSession,
     getMfaAssurance,
     listMfaFactors,
@@ -138,6 +139,13 @@ describe("cookie auth client", () => {
     });
 
     it.each([
+        [
+            "provider availability",
+            () => getAuthProviders(),
+            "/api/auth/providers",
+            undefined,
+            undefined,
+        ],
         [
             "SSO with company email",
             () => startSso("/onboarding", "lawyer@example.com"),

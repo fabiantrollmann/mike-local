@@ -80,7 +80,12 @@ describe("auth routes", () => {
     process.env.FRONTEND_URL = origin;
     process.env.NODE_ENV = "production";
     delete process.env.WORD_ADDIN_URL;
-    for (const key of ["SSO_ENABLED", "SSO_ALLOWED_DOMAINS"])
+    for (const key of [
+      "EMAIL_PASSWORD_AUTH_ONLY",
+      "GOTRUE_EXTERNAL_GOOGLE_ENABLED",
+      "SSO_ENABLED",
+      "SSO_ALLOWED_DOMAINS",
+    ])
       delete process.env[key];
     createRequestSupabase.mockReset().mockReturnValue(authClient);
     clearRequestAuthCookies.mockReset();
@@ -153,6 +158,74 @@ describe("auth routes", () => {
         skipBrowserRedirect: true,
       },
     });
+  });
+
+  it("reports the login providers that are available", async () => {
+    const defaultResponse = await request(app)
+      .get("/auth/providers")
+      .set("Origin", origin);
+
+    expect(defaultResponse.status).toBe(200);
+    expect(defaultResponse.headers["cache-control"]).toBe("private, no-store");
+    expect(defaultResponse.body).toEqual({
+      emailPassword: true,
+      google: true,
+      sso: false,
+    });
+
+    process.env.SSO_ENABLED = "true";
+    const ssoResponse = await request(app)
+      .get("/auth/providers")
+      .set("Origin", origin);
+    expect(ssoResponse.body).toEqual({
+      emailPassword: true,
+      google: true,
+      sso: true,
+    });
+  });
+
+  it("exposes and enforces email/password-only authentication", async () => {
+    process.env.EMAIL_PASSWORD_AUTH_ONLY = "true";
+    process.env.SSO_ENABLED = "true";
+
+    const providers = await request(app)
+      .get("/auth/providers")
+      .set("Origin", origin);
+    expect(providers.body).toEqual({
+      emailPassword: true,
+      google: false,
+      sso: false,
+    });
+
+    for (const body of [
+      { provider: "google" },
+      { provider: "sso", email: "lawyer@example.com" },
+    ]) {
+      const response = await request(app)
+        .post("/auth/oauth")
+        .set("Origin", origin)
+        .send(body);
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe("external_auth_disabled");
+    }
+    expect(createRequestSupabase).not.toHaveBeenCalled();
+  });
+
+  it("honors the existing Compose Google provider toggle", async () => {
+    process.env.GOTRUE_EXTERNAL_GOOGLE_ENABLED = "false";
+
+    const providers = await request(app)
+      .get("/auth/providers")
+      .set("Origin", origin);
+    expect(providers.body.google).toBe(false);
+
+    const response = await request(app)
+      .post("/auth/oauth")
+      .set("Origin", origin)
+      .send({ provider: "google" });
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe("external_auth_disabled");
+    expect(createRequestSupabase).not.toHaveBeenCalled();
   });
 
   it("disables SSO initiation by default", async () => {

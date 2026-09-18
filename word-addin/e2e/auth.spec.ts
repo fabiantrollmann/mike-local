@@ -39,6 +39,31 @@ test.describe("auth flow", () => {
     expect(await addin.getToken()).toBeNull();
   });
 
+  test("hides Google when only email and password are enabled", async ({
+    addin,
+    page,
+  }) => {
+    await page.route("**/auth/providers", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          emailPassword: true,
+          google: false,
+          sso: false,
+        }),
+      }),
+    );
+
+    await addin.gotoTaskpane();
+
+    await expect(page.getByRole("button", { name: "Log in" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Continue with Google" }),
+    ).toHaveCount(0);
+    await expect(page.getByText("or", { exact: true })).toHaveCount(0);
+  });
+
   test("Log in relies on required fields before submitting", async ({
     addin,
     page,

@@ -13,6 +13,11 @@ import {
   createRequestSupabase,
   publicAuthUser,
 } from "../../lib/authSession";
+import {
+  authProviderAvailability,
+  emailPasswordAuthOnly,
+  googleAuthEnabled,
+} from "../../lib/authProviderConfig";
 import { ssoConfiguration, ssoDomainSchema } from "../../lib/ssoConfig";
 import { sendInternalError } from "../../lib/httpError";
 import { requestOriginIsWordAddin } from "../../lib/origins";
@@ -116,6 +121,13 @@ function invalidBody(res: Response) {
   });
 }
 
+function externalAuthDisabled(res: Response) {
+  return res.status(403).json({
+    code: "external_auth_disabled",
+    detail: "External authentication providers are not enabled.",
+  });
+}
+
 function cookieClient(req: Request, res: Response): SupabaseClient | null {
   const client = res.locals.authClient as SupabaseClient | undefined;
   if (!client || res.locals.authSource !== "cookie") {
@@ -162,6 +174,10 @@ authRouter.post("/signup", asyncRoute(async (req, res) => {
     authError(res, error);
   }
 }));
+
+authRouter.get("/providers", (_req, res) => {
+  res.json(authProviderAvailability());
+});
 
 async function startSso(req: Request, res: Response) {
   try {
@@ -218,8 +234,10 @@ async function startSso(req: Request, res: Response) {
 }
 
 authRouter.post("/oauth", asyncRoute(async (req, res) => {
+  if (emailPasswordAuthOnly()) return externalAuthDisabled(res);
   if (req.body?.provider === "sso") return startSso(req, res);
   if (req.body?.provider !== "google") return invalidBody(res);
+  if (!googleAuthEnabled()) return externalAuthDisabled(res);
   try {
     const client = createRequestSupabase(req, res);
     const { data, error } = await startGoogleOAuth(

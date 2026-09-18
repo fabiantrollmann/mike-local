@@ -1,3 +1,5 @@
+import type { AuthProviderAvailability } from "@mike/contracts";
+
 export interface AuthUser {
     id: string;
     email: string;
@@ -58,6 +60,10 @@ export async function getAuthSession(): Promise<AuthUser | null> {
         if (error instanceof AuthApiError && error.status === 401) return null;
         throw error;
     }
+}
+
+export function getAuthProviders(): Promise<AuthProviderAvailability> {
+    return authRequest<AuthProviderAvailability>("/providers");
 }
 
 export async function login(email: string, password: string) {

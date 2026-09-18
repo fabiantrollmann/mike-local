@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
+import { getAuthProviders } from "./session";
 import { Input } from "../../shared/ui/input";
 import { Label } from "../../shared/ui/label";
 import { WordAddinLogo } from "../components/shell/WordAddinLogo";
@@ -34,6 +35,21 @@ export function LoginPage(): React.ReactElement {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getAuthProviders()
+      .then((providers) => {
+        if (!cancelled) setGoogleEnabled(providers.google);
+      })
+      .catch(() => {
+        if (!cancelled) setGoogleEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -137,19 +153,23 @@ export function LoginPage(): React.ReactElement {
                   {loading ? "Logging in..." : "Log in"}
                 </PillButton>
               </div>
-              <AuthDivider />
-              <PillButton
-                type="button"
-                tone="white"
-                size="normal"
-                className="w-full"
-                disabled={loading || googleLoading}
-                loading={googleLoading}
-                onClick={() => void handleGoogleLogin()}
-              >
-                <GoogleIconUI className="h-4 w-4" />
-                {googleLoading ? "Continuing…" : "Continue with Google"}
-              </PillButton>
+              {googleEnabled && (
+                <>
+                  <AuthDivider />
+                  <PillButton
+                    type="button"
+                    tone="white"
+                    size="normal"
+                    className="w-full"
+                    disabled={loading || googleLoading}
+                    loading={googleLoading}
+                    onClick={() => void handleGoogleLogin()}
+                  >
+                    <GoogleIconUI className="h-4 w-4" />
+                    {googleLoading ? "Continuing…" : "Continue with Google"}
+                  </PillButton>
+                </>
+              )}
             </form>
           </div>
           <div className="text-center text-sm text-gray-500">

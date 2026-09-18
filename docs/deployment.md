@@ -218,13 +218,30 @@ HttpOnly cookie. No Supabase access or refresh token enters add-in JavaScript or
 OfficeRuntime storage. The add-in also does not retain Google's provider access
 token or request Google Drive or Gmail access.
 
+## Restrict authentication to email and password
+
+Set this in the backend environment to hide and reject every external login
+provider while keeping signup, login, email confirmation, password reset, and
+MFA available:
+
+```dotenv
+EMAIL_PASSWORD_AUTH_ONLY=true
+```
+
+The backend exposes the effective provider policy to the web app and Word
+add-in at runtime, so changing this setting needs only a backend restart. It
+takes precedence over `SSO_ENABLED` and blocks Mike's Google OAuth and SSO
+initiation endpoints even when the providers remain configured in Supabase.
+Keep the underlying provider configuration disabled as well if users can reach
+your Supabase Auth service through another application.
+
 ## Enterprise SSO (SAML)
 
 Self-hosted Mike can use SAML providers registered in Supabase Auth (GoTrue),
 including Okta, Microsoft Entra ID, and Google Workspace SAML. The login page
 offers an SSO entry point; the backend permits the flow only when SSO is
-enabled. The existing email/password and Google methods remain available; this
-feature does not enforce SSO-only access.
+enabled. The existing email/password and Google methods remain available unless
+`EMAIL_PASSWORD_AUTH_ONLY=true`; this feature does not enforce SSO-only access.
 
 ### Configure GoTrue
 

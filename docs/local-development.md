@@ -83,7 +83,9 @@ http://localhost:54321/auth/v1/callback
 ```
 
 Google OAuth is enabled by default. Set the client values in the root `.env`,
-or set `GOTRUE_EXTERNAL_GOOGLE_ENABLED=false` to opt out. Then recreate Auth:
+or set `GOTRUE_EXTERNAL_GOOGLE_ENABLED=false` to opt out. The backend also uses
+this value to hide and reject Google login, so recreate both services after a
+change:
 
 ```env
 GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=<client-id>
@@ -91,7 +93,7 @@ GOTRUE_EXTERNAL_GOOGLE_SECRET=<client-secret>
 ```
 
 ```bash
-docker compose up -d --force-recreate auth
+docker compose up -d --force-recreate auth backend
 ```
 
 For the Supabase CLI stack, register
@@ -111,6 +113,19 @@ supabase start
 The checked-in configuration already allows the web callback and the local
 Word dialog callback at `https://localhost:3200/oauth-dialog.html`. Add your
 Google account as an OAuth test user while the Google app remains in testing.
+
+## Email/password-only authentication
+
+Set `EMAIL_PASSWORD_AUTH_ONLY=true` in the root `.env` for Docker Compose, or
+in `backend/.env` when running the backend directly, to offer only email and
+password on the web login, signup, and Word add-in login screens. The backend
+also rejects attempts to start Google OAuth or enterprise SSO, even if those
+providers remain configured in Supabase Auth. Restart the backend after
+changing the value; the clients read the policy at runtime and do not require
+a rebuild.
+
+This deployment policy takes precedence over `SSO_ENABLED`. Set it to `false`
+again before re-enabling Google or SSO login.
 
 ## Local models with Ollama
 

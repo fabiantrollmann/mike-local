@@ -10,8 +10,12 @@ export const ssoDomainSchema = z
     /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
   );
 
+export function ssoEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.SSO_ENABLED?.trim().toLowerCase() === "true";
+}
+
 export function ssoConfiguration(env: NodeJS.ProcessEnv = process.env) {
-  const enabled = env.SSO_ENABLED?.trim().toLowerCase() === "true";
+  const enabled = ssoEnabled(env);
   if (!enabled) {
     return {
       enabled: false,
