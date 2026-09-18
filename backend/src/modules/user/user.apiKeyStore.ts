@@ -15,6 +15,8 @@ export type ApiKeyProvider =
 export type ApiKeySource = "user" | "env" | null;
 export type ApiKeyStatus = Record<ApiKeyProvider, boolean> & {
     sources: Record<ApiKeyProvider, ApiKeySource>;
+    /** Deployment policy: clients must offer only dynamically discovered local models. */
+    localModelsOnly?: true;
 };
 
 type EncryptedKeyRow = {
@@ -65,6 +67,12 @@ function envApiKey(provider: ApiKeyProvider): string | null {
 
 export function hasEnvApiKey(provider: ApiKeyProvider): boolean {
     return !!envApiKey(provider);
+}
+
+function localModelsOnly(): boolean {
+    return /^(?:1|true|yes)$/i.test(
+        process.env.LOCAL_MODELS_ONLY?.trim() ?? "",
+    );
 }
 
 const KEY_SALT = "mike-user-api-keys-v1";
@@ -151,6 +159,7 @@ export async function getUserApiKeyStatus(
             "opencode-go": null,
             courtlistener: null,
         },
+        ...(localModelsOnly() ? { localModelsOnly: true as const } : {}),
     };
 
     for (const provider of PROVIDERS) {

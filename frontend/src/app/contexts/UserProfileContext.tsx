@@ -142,6 +142,7 @@ function emptyApiKeys(): ApiKeyState {
 function toProfile(data: ApiUserProfile): UserProfile {
     const { apiKeyStatus, ...profile } = data;
     const apiKeys = emptyApiKeys();
+    if (apiKeyStatus.localModelsOnly) apiKeys.localModelsOnly = true;
     for (const provider of API_KEY_PROVIDERS) {
         apiKeys[provider] = {
             configured: !!apiKeyStatus[provider],

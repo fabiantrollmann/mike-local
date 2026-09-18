@@ -188,12 +188,13 @@ interface Props {
   onReasoningChange?: (level: ReasoningLevel) => void;
 }
 
-export type NoModelsReason = "api-keys" | "router-models";
+export type NoModelsReason = "api-keys" | "router-models" | "local-models";
 
 export function noModelsReason(
   apiKeys: ApiKeyState | undefined,
   routerModels: Partial<Record<RouterSlug, string[]>>,
 ): NoModelsReason {
+  if (apiKeys?.localModelsOnly) return "local-models";
   const configuredRouterWithoutModels = ROUTER_SLUGS.some(
     (slug) =>
       apiKeys?.[slug]?.configured === true &&

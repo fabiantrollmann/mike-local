@@ -176,7 +176,7 @@ describe("word add-in catalog parity", () => {
                         source: provider === configured ? "user" : null,
                     },
                 ]),
-            ) as ApiKeyState;
+            ) as unknown as ApiKeyState;
             for (const id of sharedIds) {
                 expect
                     .soft(
@@ -186,5 +186,35 @@ describe("word add-in catalog parity", () => {
                     .toBe(webIsModelAvailable(id, webState));
             }
         }
+    });
+
+    it("keeps the local-only deployment policy in parity", () => {
+        const addinStatus = {
+            claude: true,
+            gemini: true,
+            openai: true,
+            openrouter: true,
+            vercel: true,
+            "opencode-go": true,
+            courtlistener: false,
+            localModelsOnly: true,
+        } as ApiKeyStatus;
+        const webState = {
+            claude: { configured: true, source: "user" },
+            gemini: { configured: true, source: "user" },
+            openai: { configured: true, source: "user" },
+            openrouter: { configured: true, source: "user" },
+            vercel: { configured: true, source: "user" },
+            "opencode-go": { configured: true, source: "user" },
+            courtlistener: { configured: false, source: null },
+            localModelsOnly: true,
+        } as ApiKeyState;
+
+        for (const id of ["gpt-5.6-sol", "openrouter/openai/gpt-5.4"]) {
+            expect(addinIsModelAvailable(id, addinStatus)).toBe(false);
+            expect(webIsModelAvailable(id, webState)).toBe(false);
+        }
+        expect(addinIsModelAvailable("ollama/qwen3.6", addinStatus)).toBe(true);
+        expect(webIsModelAvailable("ollama/qwen3.6", webState)).toBe(true);
     });
 });

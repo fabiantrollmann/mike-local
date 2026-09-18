@@ -45,6 +45,7 @@ describe("hasEnvApiKey", () => {
         "VERCEL_AI_GATEWAY_API_KEY",
         "OPENCODE_API_KEY",
         "USER_API_KEYS_ENCRYPTION_SECRET",
+        "LOCAL_MODELS_ONLY",
     ];
 
     // Clear before AND after each test so keys exported in the developer's
@@ -101,6 +102,21 @@ describe("hasEnvApiKey", () => {
     it("ignores whitespace-only env values", () => {
         process.env.ANTHROPIC_API_KEY = "   ";
         expect(hasEnvApiKey("claude")).toBe(false);
+    });
+
+    it("publishes the local-only deployment policy to clients", async () => {
+        process.env.LOCAL_MODELS_ONLY = "true";
+        const db = {
+            from: () => ({
+                select: () => ({
+                    eq: async () => ({ data: [], error: null }),
+                }),
+            }),
+        };
+
+        await expect(
+            getUserApiKeyStatus("user-1", db as never),
+        ).resolves.toMatchObject({ localModelsOnly: true });
     });
 });
 

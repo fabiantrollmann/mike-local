@@ -122,6 +122,11 @@ The Dockerized backend reaches Ollama on the host at
 `http://host.docker.internal:11434/v1`. Override `OLLAMA_BASE_URL` if Ollama is
 available elsewhere.
 
+Set `LOCAL_MODELS_ONLY=true` in the root `.env` for Docker Compose, or in
+`backend/.env` when running the backend directly, to hide every cloud model in
+the web and Word model pickers. Existing provider keys can remain configured;
+the deployment policy takes precedence in the clients.
+
 Choose a model that fits the host's available memory, pull it, then refresh
 Mike. Replace `MODEL_TAG` with a tag from the Ollama library:
 
