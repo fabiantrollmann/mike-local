@@ -16,6 +16,7 @@ const keys = (configured: {
     openrouter?: boolean;
     vercel?: boolean;
     opencodego?: boolean;
+    localModelsOnly?: boolean;
 }): ApiKeyState =>
     ({
         claude: { configured: !!configured.claude, source: null },
@@ -28,6 +29,7 @@ const keys = (configured: {
             source: null,
         },
         courtlistener: { configured: false, source: null },
+        ...(configured.localModelsOnly ? { localModelsOnly: true } : {}),
     }) as ApiKeyState;
 
 describe("getModelProvider", () => {
@@ -100,6 +102,13 @@ describe("isModelAvailable", () => {
 
     it("is true for ollama models even with no keys configured", () => {
         expect(isModelAvailable("ollama/llama3.2", keys({}))).toBe(true);
+    });
+
+    it("offers only Ollama when the deployment is local-only", () => {
+        const localOnly = keys({ openai: true, localModelsOnly: true });
+
+        expect(isModelAvailable("gpt-5.6-sol", localOnly)).toBe(false);
+        expect(isModelAvailable("ollama/qwen3.6", localOnly)).toBe(true);
     });
 });
 

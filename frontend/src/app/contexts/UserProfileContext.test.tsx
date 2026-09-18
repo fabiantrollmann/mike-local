@@ -98,6 +98,13 @@ function LastSelectedModel() {
     );
 }
 
+function ModelPolicy() {
+    const { profile } = useUserProfile();
+    return (
+        <span>{profile?.apiKeys.localModelsOnly ? "local-only" : "all"}</span>
+    );
+}
+
 function TabularChatSettings() {
     const { persistChatModelSelection, persistChatReasoningSelection } =
         useUserProfile();
@@ -140,6 +147,27 @@ afterEach(() => {
 });
 
 describe("UserProfileProvider dark mode", () => {
+    it("propagates the local-only deployment policy", async () => {
+        const profile = apiProfile(true);
+        getUserProfile.mockResolvedValueOnce({
+            ...profile,
+            apiKeyStatus: {
+                ...profile.apiKeyStatus,
+                localModelsOnly: true,
+            },
+        });
+
+        render(
+            <UserProfileProvider>
+                <ModelPolicy />
+            </UserProfileProvider>,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByText("local-only")).toBeVisible(),
+        );
+    });
+
     it("switches from dark to light and back to dark", async () => {
         render(
             <UserProfileProvider>

@@ -30,10 +30,12 @@ import {
 import { AuthDivider } from "@/app/components/auth/AuthDivider";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { FieldLabel } from "@/app/components/ui/form-field";
+import { useAuthProviders } from "@/app/hooks/useAuthProviders";
 
 function SignupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const authProviders = useAuthProviders();
     const { isAuthenticated, authLoading, refreshSession } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -232,12 +234,16 @@ function SignupContent() {
                             >
                                 {loading ? "Creating account..." : "Sign up"}
                             </PillButtonUI>
-                            <AuthDivider />
-                            <GoogleAuthButton
-                                onError={setError}
-                                disabled={loading}
-                                onLoadingChange={setLoading}
-                            />
+                            {authProviders?.google && (
+                                <>
+                                    <AuthDivider />
+                                    <GoogleAuthButton
+                                        onError={setError}
+                                        disabled={loading}
+                                        onLoadingChange={setLoading}
+                                    />
+                                </>
+                            )}
                         </div>
                     </form>
                 </div>

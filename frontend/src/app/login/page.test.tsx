@@ -3,8 +3,20 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginPage from "./page";
 
-const { login, startGoogleOAuth, refreshSession, replace, push } = vi.hoisted(
+const {
+    authProviders,
+    login,
+    startGoogleOAuth,
+    refreshSession,
+    replace,
+    push,
+} = vi.hoisted(
     () => ({
+        authProviders: {
+            emailPassword: true,
+            google: true,
+            sso: true,
+        },
         login: vi.fn(),
         startGoogleOAuth: vi.fn(),
         refreshSession: vi.fn(),
@@ -20,6 +32,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/lib/authApi", () => ({
     login,
     startGoogleOAuth,
+}));
+
+vi.mock("@/app/hooks/useAuthProviders", () => ({
+    useAuthProviders: () => authProviders,
 }));
 
 vi.mock("@/app/contexts/AuthContext", () => ({
@@ -42,6 +58,8 @@ describe("LoginPage", () => {
         refreshSession.mockResolvedValue(null);
         replace.mockReset();
         push.mockReset();
+        authProviders.google = true;
+        authProviders.sso = true;
     });
 
     it("allows an existing account to submit a password shorter than the new minimum", async () => {
@@ -80,5 +98,21 @@ describe("LoginPage", () => {
             google.compareDocumentPosition(sso) &
                 Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
+    });
+
+    it("shows only email and password when external providers are disabled", () => {
+        authProviders.google = false;
+        authProviders.sso = false;
+
+        render(<LoginPage />);
+
+        expect(
+            screen.queryByRole("button", { name: "Continue with Google" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Continue with SSO" }),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText("or")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Log in" })).toBeVisible();
     });
 });

@@ -26,7 +26,7 @@ function keys(configured: Partial<Record<keyof ApiKeyState, boolean>>) {
                 source: configured[provider] ? "user" : null,
             },
         ]),
-    ) as ApiKeyState;
+    ) as unknown as ApiKeyState;
 }
 
 describe("ModelToggle responsive trigger", () => {
@@ -187,6 +187,23 @@ describe("ModelToggle responsive trigger", () => {
 });
 
 describe("ModelToggle availability states", () => {
+    it("hides configured cloud models when the deployment is local-only", () => {
+        const apiKeys = keys({ openai: true });
+        apiKeys.localModelsOnly = true;
+        render(
+            <ModelToggle
+                value="gpt-5.6-sol"
+                onChange={vi.fn()}
+                apiKeys={apiKeys}
+            />,
+        );
+
+        expect(
+            screen.getByRole("button", { name: "No models available" }),
+        ).toHaveTextContent("No Models");
+        expect(screen.queryByText("GPT-5.6 Sol")).not.toBeInTheDocument();
+    });
+
     it("renders a neutral disabled trigger while keys are loading", () => {
         render(
             <ModelToggle

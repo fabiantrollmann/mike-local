@@ -215,6 +215,19 @@ export const test = base.extend<{ addin: Addin }>({
       });
     });
 
+    await page.route("**/auth/providers", (route, request) => {
+      if (request.method() !== "GET") return route.fallback();
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          emailPassword: true,
+          google: true,
+          sso: false,
+        }),
+      });
+    });
+
     await page.route("**/auth/logout", (route, request) => {
       if (request.method() !== "POST") return route.fallback();
       seed.token = undefined;

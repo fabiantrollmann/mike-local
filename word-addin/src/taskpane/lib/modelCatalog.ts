@@ -196,6 +196,7 @@ export function isModelAvailable(
   // blocking sends here on a flaky WKWebView request would brick the composer
   // for requests the backend would happily accept.
   if (!status) return true;
+  if (status.localModelsOnly) return false;
   if (modelId.startsWith("openrouter/")) return !!status.openrouter;
   if (modelId.startsWith("vercel/")) return !!status.vercel;
   if (modelId.startsWith("opencode-go/")) return !!status["opencode-go"];

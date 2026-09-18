@@ -3,7 +3,19 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SignupPage from "./page";
 
-const { signup, startGoogleOAuth, refreshSession, replace, push } = vi.hoisted(() => ({
+const {
+    authProviders,
+    signup,
+    startGoogleOAuth,
+    refreshSession,
+    replace,
+    push,
+} = vi.hoisted(() => ({
+    authProviders: {
+        emailPassword: true,
+        google: true,
+        sso: false,
+    },
     signup: vi.fn(),
     startGoogleOAuth: vi.fn(),
     refreshSession: vi.fn(),
@@ -19,6 +31,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/lib/authApi", () => ({
     signup,
     startGoogleOAuth,
+}));
+
+vi.mock("@/app/hooks/useAuthProviders", () => ({
+    useAuthProviders: () => authProviders,
 }));
 
 vi.mock("@/app/contexts/AuthContext", () => ({
@@ -40,6 +56,7 @@ describe("SignupPage", () => {
         refreshSession.mockReset();
         replace.mockReset();
         push.mockReset();
+        authProviders.google = true;
     });
 
     it("creates credentials and waits for email confirmation", async () => {
@@ -88,5 +105,17 @@ describe("SignupPage", () => {
         expect(
             screen.queryByRole("button", { name: "Continue with SSO" }),
         ).not.toBeInTheDocument();
+    });
+
+    it("hides Google when external providers are disabled", () => {
+        authProviders.google = false;
+
+        render(<SignupPage />);
+
+        expect(
+            screen.queryByRole("button", { name: "Continue with Google" }),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText("or")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Sign up" })).toBeVisible();
     });
 });

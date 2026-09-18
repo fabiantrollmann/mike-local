@@ -1,5 +1,11 @@
 // Authored wire contracts. No server, browser, UI or storage dependencies.
 
+export type AuthProviderAvailability = {
+  emailPassword: true;
+  google: boolean;
+  sso: boolean;
+};
+
 export type SourceDocumentType =
   | "docx"
   | "pdf"

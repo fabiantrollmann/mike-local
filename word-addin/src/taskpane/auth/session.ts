@@ -1,4 +1,5 @@
 /// <reference types="office-js" />
+import type { AuthProviderAvailability } from "@mike/contracts";
 import { describeNetworkFailure } from "../lib/networkError";
 import { parseGoogleOAuthDialogMessage } from "./oauthProtocol";
 
@@ -57,6 +58,23 @@ async function parseError(response: Response): Promise<string> {
   return typeof body.detail === "string" && body.detail
     ? `${body.detail} (HTTP ${response.status}).`
     : `Authentication failed (HTTP ${response.status}).`;
+}
+
+export async function getAuthProviders(): Promise<AuthProviderAvailability> {
+  const url = `${API_BASE}/auth/providers`;
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      credentials: "include",
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new Error(describeNetworkFailure(error, { method: "GET", url }), {
+      cause: error,
+    });
+  }
+  if (!response.ok) throw new Error(await parseError(response));
+  return (await response.json()) as AuthProviderAvailability;
 }
 
 async function requestSession(): Promise<AddinAuthUser | null> {

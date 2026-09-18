@@ -804,10 +804,14 @@ export type ApiKeyState = Record<
         configured: boolean;
         source: ApiKeySource;
     }
->;
+> & {
+    /** When set by the deployment, cloud models stay out of every picker. */
+    localModelsOnly?: true;
+};
 
 export type ApiKeyStatus = Record<ApiKeyProvider, boolean> & {
     sources?: Partial<Record<ApiKeyProvider, ApiKeySource>>;
+    localModelsOnly?: true;
 };
 
 export async function getApiKeyStatus(): Promise<ApiKeyStatus> {

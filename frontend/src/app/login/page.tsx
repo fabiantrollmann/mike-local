@@ -18,6 +18,7 @@ import { SsoAuthButton } from "@/app/components/auth/SsoAuthButton";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { FieldLabel } from "@/app/components/ui/form-field";
 import { knownErrorCodeMessage } from "@/app/lib/userFacingError";
+import { useAuthProviders } from "@/app/hooks/useAuthProviders";
 
 const LOGIN_ERROR_MESSAGES = {
     invalid_credentials: "The email or password is incorrect.",
@@ -26,6 +27,7 @@ const LOGIN_ERROR_MESSAGES = {
 
 export default function LoginPage() {
     const router = useRouter();
+    const authProviders = useAuthProviders();
     const {
         isAuthenticated,
         authLoading,
@@ -140,13 +142,21 @@ export default function LoginPage() {
                                 {loading ? "Logging in..." : "Log in"}
                             </PillButtonUI>
                         </div>
-                        <AuthDivider />
-                        <GoogleAuthButton
-                            onError={setError}
-                            disabled={loading}
-                            onLoadingChange={setLoading}
-                        />
-                        <SsoAuthButton disabled={loading} />
+                        {(authProviders?.google || authProviders?.sso) && (
+                            <>
+                                <AuthDivider />
+                                {authProviders.google && (
+                                    <GoogleAuthButton
+                                        onError={setError}
+                                        disabled={loading}
+                                        onLoadingChange={setLoading}
+                                    />
+                                )}
+                                {authProviders.sso && (
+                                    <SsoAuthButton disabled={loading} />
+                                )}
+                            </>
+                        )}
                     </form>
                 </div>
                 <div className="text-center text-sm text-gray-500">

@@ -15,6 +15,8 @@ import { PillButtonUI } from "@/shared/ui/PillButtonUI";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { startSso } from "@/app/lib/authApi";
 import { knownErrorCodeMessage } from "@/app/lib/userFacingError";
+import { useAuthProviders } from "@/app/hooks/useAuthProviders";
+import { FullScreenLoader } from "@/app/components/shared/FullScreenLoader";
 
 const SSO_ERROR_MESSAGES = {
     invalid_request: "Enter a valid company email address.",
@@ -27,6 +29,7 @@ const SSO_ERROR_MESSAGES = {
 
 export default function SsoLoginPage() {
     const router = useRouter();
+    const authProviders = useAuthProviders();
     const { isAuthenticated, authLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
@@ -37,6 +40,12 @@ export default function SsoLoginPage() {
             router.replace("/onboarding/profile");
         }
     }, [authLoading, isAuthenticated, router]);
+
+    useEffect(() => {
+        if (authProviders && !authProviders.sso) {
+            router.replace("/login");
+        }
+    }, [authProviders, router]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -60,6 +69,8 @@ export default function SsoLoginPage() {
             setLoading(false);
         }
     };
+
+    if (!authProviders?.sso) return <FullScreenLoader />;
 
     return (
         <div className="relative flex min-h-dvh items-center justify-center bg-gray-50/80 px-6 py-10">

@@ -37,6 +37,7 @@ export function isProviderAvailable(
     apiKeys: ApiKeyState,
 ): boolean {
     if (provider === "ollama") return true; // local, no key needed
+    if (apiKeys.localModelsOnly) return false;
     return !!apiKeys[provider]?.configured;
 }
 

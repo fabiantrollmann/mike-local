@@ -268,6 +268,8 @@ export interface ApiKeyStatus {
   vercel: boolean;
   "opencode-go": boolean;
   courtlistener: boolean;
+  /** Deployment policy: hide every non-local model from the task pane. */
+  localModelsOnly?: true;
   sources?: Partial<
     Record<
       | "claude"

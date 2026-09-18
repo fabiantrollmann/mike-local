@@ -55,6 +55,10 @@ export function ApiKeyBanner(): React.ReactElement | null {
     getApiKeyStatus()
       .then((status: ApiKeyStatus) => {
         if (cancelled) return;
+        if (status.localModelsOnly) {
+          setMissingKey(false);
+          return;
+        }
         const anyConfigured = status.claude || status.gemini || status.openai;
         setMissingKey(!anyConfigured);
       })

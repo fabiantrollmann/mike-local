@@ -3,7 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SsoLoginPage from "./page";
 
-const { startSso, replace } = vi.hoisted(() => ({
+const { authProviders, startSso, replace } = vi.hoisted(() => ({
+    authProviders: {
+        emailPassword: true,
+        google: true,
+        sso: true,
+    },
     startSso: vi.fn(),
     replace: vi.fn(),
 }));
@@ -13,6 +18,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/app/lib/authApi", () => ({ startSso }));
+
+vi.mock("@/app/hooks/useAuthProviders", () => ({
+    useAuthProviders: () => authProviders,
+}));
 
 vi.mock("@/app/contexts/AuthContext", () => ({
     useAuth: () => ({ isAuthenticated: false, authLoading: false }),
@@ -27,6 +36,7 @@ describe("SsoLoginPage", () => {
         startSso.mockReset();
         replace.mockReset();
         startSso.mockResolvedValue({ url: "https://idp.example/saml" });
+        authProviders.sso = true;
     });
 
     it("starts SSO with the company email", async () => {
@@ -65,5 +75,16 @@ describe("SsoLoginPage", () => {
             "Single sign-on is not available for this email domain.",
         );
         expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+    });
+
+    it("redirects to login when SSO is disabled", () => {
+        authProviders.sso = false;
+
+        render(<SsoLoginPage />);
+
+        expect(replace).toHaveBeenCalledWith("/login");
+        expect(
+            screen.queryByRole("heading", { name: "SSO Login" }),
+        ).not.toBeInTheDocument();
     });
 });
