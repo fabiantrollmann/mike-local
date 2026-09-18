@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { useUserProfile } from "@/app/contexts/UserProfileContext";
 import { settingsTabButtonClassName } from "./settingsStyles";
 
 interface TabDef {
@@ -45,12 +46,25 @@ export default function SettingsLayout({
     const router = useRouter();
     const pathname = usePathname();
     const { isAuthenticated, authLoading } = useAuth();
+    const { profile } = useUserProfile();
+    const localModelsOnly = profile?.apiKeys.localModelsOnly === true;
+    const byokBlocked =
+        localModelsOnly && pathname.startsWith("/settings/byok");
+    const visibleTabs = localModelsOnly
+        ? TABS.filter((tab) => tab.id !== "byok")
+        : TABS;
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             router.push("/");
         }
     }, [isAuthenticated, authLoading, router]);
+
+    useEffect(() => {
+        if (byokBlocked) {
+            router.replace("/settings/models");
+        }
+    }, [byokBlocked, router]);
 
     if (authLoading) {
         return (
@@ -81,7 +95,7 @@ export default function SettingsLayout({
                         <div className="-m-1 min-w-0 p-1">
                             <div className="-m-1 min-w-0 overflow-x-auto overflow-y-hidden p-1">
                                 <ul className="mb-0 flex gap-1 md:flex-col">
-                                    {TABS.map((tab) => {
+                                    {visibleTabs.map((tab) => {
                                         const active =
                                             pathname === tab.href ||
                                             (tab.href !== "/settings" &&
@@ -112,7 +126,9 @@ export default function SettingsLayout({
                         </div>
                     </nav>
 
-                    <div className="min-w-0 outline-none">{children}</div>
+                    <div className="min-w-0 outline-none">
+                        {byokBlocked ? null : children}
+                    </div>
                 </div>
             </main>
         </div>

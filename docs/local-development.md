@@ -139,8 +139,10 @@ available elsewhere.
 
 Set `LOCAL_MODELS_ONLY=true` in the root `.env` for Docker Compose, or in
 `backend/.env` when running the backend directly, to hide every cloud model in
-the web and Word model pickers. Existing provider keys can remain configured;
-the deployment policy takes precedence in the clients.
+the web and Word model pickers. The web settings also hide Bring Your Own Keys
+and redirect direct visits to that page to Model Preferences. Existing provider
+keys can remain configured; the deployment policy takes precedence in the
+clients.
 
 Choose a model that fits the host's available memory, pull it, then refresh
 Mike. Replace `MODEL_TAG` with a tag from the Ollama library:
